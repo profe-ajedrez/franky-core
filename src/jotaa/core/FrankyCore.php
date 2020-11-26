@@ -151,6 +151,7 @@ class FrankyCore
 
             if ($franky->environment() === self::ENV_DEV) {
                 echo $html;
+                die;
             }
         });
 
