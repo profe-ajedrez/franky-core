@@ -4,7 +4,7 @@ require_once '../../vendor/autoload.php';
 
 use jotaa\core\FrankyCore;
 
-$franky = FrankyCore::getApp(
+$franky = new FrankyCore(
     [
         'database' => 'expoin',
         'username' => 'homestead',
@@ -21,8 +21,21 @@ $franky = FrankyCore::getApp(
     ]
 );
 
-$franky->route('GET /', function () use ($franky) {
-    var_dump($franky->config('fuck'));
-});
+$franky->router->setBasePath('/fcoregt/tests/core');
+$franky->router->map(
+    'GET',
+    '/',
+    function() use ($franky) {
+        var_dump($franky->config());
+    }
+);
 
-$franky->start();
+$match = $franky->router->match();
+
+// call closure or throw 404 status
+if( is_array($match) && is_callable( $match['target'] ) ) {
+    call_user_func_array( $match['target'], $match['params'] );
+} else {
+    // no route was matched
+    header( $_SERVER["SERVER_PROTOCOL"] . ' 404 Not Found');
+}

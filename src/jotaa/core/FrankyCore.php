@@ -18,7 +18,7 @@ use Monolog\Handler\StreamHandler;
  * @Author  Andrés Reyes a.k.a. Undercoder a.k.a. Jacobopous
  * @Version 0.1.0
  */
-class FrankyCore
+final class FrankyCore
 {
     public const ENV_PROD = 'PRODUCTION';
     public const ENV_DEV  = 'DEVELOPMENT';
@@ -26,140 +26,101 @@ class FrankyCore
 
     public const CORE_ALLOWED_ENVIRONMENTS = [self::ENV_PROD, self::ENV_DEV, self::ENV_QA];
 
-    public static function getApp(
-        array $dbOptions,
-        array $config,
-        string $environment = self::ENV_DEV
-    ) : \flight\Engine {
+    private \AltoRouter $router;
+    private \Pop\Db\Adapter\AbstractAdapter $db;
+    private CoreMailHandlerPhpMailer $mailer;
+    private string $environment;
+    private array $config;
+    private \Pop\Session\Session $session;
+    private \Monolog\Logger $log;
+    private $whoops;
 
-        
 
-        $franky = new \flight\Engine();
-        $db = \Pop\Db\Db::connect('mysql', $dbOptions);
-        \Pop\Db\Record::setDb($db);
+    public function __construct(array $dbOptions, array $config, string $environment = self::ENV_DEV)
+    {
+        $this->router = new \AltoRouter();
+        $this->db = \Pop\Db\Db::connect('mysql', $dbOptions);
+        \Pop\Db\Record::setDb($this->db);
 
-        $mailer = new CoreMailHandlerPhpMailer();
+        $this->mailer = new CoreMailHandlerPhpMailer();
+        $this->environment = $environment;
+        $this->config = $config;
+        $this->session = \Pop\Session\Session::getInstance();
 
-        $franky->map(
-            'mailer',
-            function () use ($mailer) {
-                return $mailer;
-            }
-        );
-
-        $franky->map(
-            'db',
-            function () use ($db) {
-                return $db;
-            }
-        );
-
-        $franky->map(
-            'environment',
-            function () use ($environment) {
-                return $environment;
-            }
-        );
-
-        $franky->map(
-            'config',
-            function (string $key = '') use ($config) {
-                if (empty($key)) {
-                    return $config;
-                }
-                if (array_key_exists($key, $config)) {
-                    return $config[$key];
-                }
-                throw new \OutOfBoundsException("Undefined config key {$key}");
-            }
-        );
-
-        assert(method_exists($franky, 'config'));
-
-        $franky->map(
-            'rootPath',
-            function () use ($franky) {
-                assert(method_exists($franky, 'config'));
-                return $franky->config('rootPath');
-            }
-        );
-
-        $franky->map(
-            'viewPath',
-            function () use ($franky) {
-                return $franky->config('viewPath');
-            }
-        );
-
-        $franky->map(
-            'assetPath',
-            function () use ($franky) {
-                return $franky->config('assetPath');
-            }
-        );
-
-        $franky->map(
-            'cssPath',
-            function () use ($franky) {
-                return $franky->config('cssPath');
-            }
-        );
-
-        $franky->map(
-            'merge',
-            function (array $m1, array $m2) {
-                return self::merge($m1, $m2);
-            }
-        );
-
-        $franky->map(
-            'session',
-            function () {
-                return \Pop\Session\Session::getInstance();
-            }
-        );
-
-        $log = new Logger('name');
-        $log->pushHandler(
+        $this->log = new Logger('name');
+        $this->log->pushHandler(
             new StreamHandler(
-                $franky->config('logPath'),
+                $this->config('logPath'),
                 Logger::INFO
             )
         );
 
-        $franky->map('log', function () use ($log) {
-            return $log;
-        });
+        $this->mailer->registerMailHandler($this->log);
 
         $whoops = new \Whoops\Run;
-        $whoops->allowQuit(false);
-        $whoops->writeToOutput(false);
-        $whoops->pushHandler(new \Whoops\Handler\PrettyPageHandler);
-        $whoops->register();
-
-        $franky->map('whoops', function () use ($whoops) {
-            return $whoops;
-        });
-
-        // create a log channel
-        \Flight::set('flight.log_errors', true);
-
-        $mailer->registerMailHandler($log);
-        $franky->map('error', function ($ex) use ($franky) {
-            $html = $franky->whoops()->handleException($ex);
-            $franky->log()->error($ex);
-
-            if ($franky->environment() === self::ENV_DEV) {
-                echo $html;
-                die;
+        $sself = $this;
+        $whoops->pushHandler(
+            function ($ex) use ($sself, $whoops) {
+                $sself->log->error($ex);
+                if ($sself->environment === self::ENV_DEV) {
+                    $whoops->pushHandler(new \Whoops\Handler\PrettyPageHandler);
+                    $html = $whoops->handleException($ex);
+                    echo $html;
+                    return  \Whoops\Handler\Handler::DONE;
+                }
             }
-        });
-
-        return $franky;
+        );
+        $whoops->register();
+        $this->whoops = $whoops;
     }
 
-    private static function merge(array $m, array $m2)
+
+    public function __get(string $property = '')
     {
-        return array_merge($m, $m2);
+        if (property_exists($this, $property)) {
+            if ($property === 'config') {
+                throw new \jotaa\core\core_exceptions\CoreShouldUseOtherException('You should use getConfig method');
+            }
+            return $this->{$property};
+        }
+        throw new CoreUnexistentPropertyException("Undefined property {$property}");
+    }
+
+
+    public function config(string $key = '')
+    {
+        if (empty($key)) {
+            return $this->config;
+        }
+
+        if (array_key_exists($key, $this->config)) {
+            return $this->config[$key];
+        }
+
+        throw new \OutOfBoundsException("key {$key} doesnt exists in FrankyCore::\$config");
+    }
+
+
+    public function rootPath()
+    {
+        return $this->config('rootPath');
+    }
+
+
+    public function viewPath()
+    {
+        return $this->config('viewPath');
+    }
+
+
+    public function assetPath()
+    {
+        return $this->config('assetPath');
+    }
+
+
+    public function cssPath()
+    {
+        return $this->config('cssPath');
     }
 }
