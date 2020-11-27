@@ -27,7 +27,7 @@ $franky->router()->map(
     'GET',
     '/',
     function () use ($franky) {
-        $franky->callBehavior('saluda');
+        var_dump($franky->callBehavior('saluda'));
     }
 );
 
@@ -42,9 +42,9 @@ $franky->attachBehavior(
              $this->owner = WeakReference::create($franky);
         }
 
-        public function run(array $parameters = []) : void
+        public function run(array $parameters = [])
         {
-            var_dump($this->owner->get());
+            return "Hola, estoy saludando";
         }
 
         public function getOwnerReference()

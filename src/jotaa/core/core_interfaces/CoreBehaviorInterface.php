@@ -6,7 +6,15 @@ use WeakReference;
 
 interface CoreBehaviorInterface
 {
-    public function run(array $parameters = []) : void;
+    /**
+     * run
+     *
+     * executes the attached behavior and returns its result
+     *
+     * @param array $parameters
+     * @return mixed
+     */
+    public function run(array $parameters = []);
     public function getOwnerReference();
     public function getBehaviorName() : string;
 }

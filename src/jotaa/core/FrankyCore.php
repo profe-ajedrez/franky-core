@@ -246,12 +246,11 @@ final class FrankyCore implements CoreHasBehaviorInterface
         throw new CoreUndefinedBehaviorException("Behavior {$behaviorName} is undefined in list of custom behaviors");
     }
 
-    public function callBehavior(string $behaviorName, array $parameters = []) : void
+    public function callBehavior(string $behaviorName, array $parameters = [])
     {
         if (array_key_exists($behaviorName, $this->behaviors)) {
             $behavior = ($this->behaviors[$behaviorName]);
-            $behavior->run($parameters);
-            return;
+            return $behavior->run($parameters);
         }
         throw new CoreUndefinedBehaviorException("Behavior {$behaviorName} is undefined in list of custom behaviors");
     }

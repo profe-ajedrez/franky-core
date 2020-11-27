@@ -10,5 +10,14 @@ interface CoreHasBehaviorInterface
 
     public function removeBehavior(string $behaviorName) : CoreBehaviorInterface;
     
-    public function callBehavior(string $behaviorName, array $parameters = []) : void;
+    /**
+     * callBehavior
+     *
+     * Executes the attached indicated behavior, returning its result
+     *
+     * @param string $behaviorName
+     * @param array $parameters
+     * @return void
+     */
+    public function callBehavior(string $behaviorName, array $parameters = []);
 }
