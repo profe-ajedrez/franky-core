@@ -7,6 +7,8 @@ use jotaa\core\core_exceptions\CoreFileDoesntExistsException;
 use jotaa\core\core_exceptions\CoreUnexistentPropertyException;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
+use Pop\Db\Adapter\AbstractAdapter;
+use Pop\Session\Session;
 
 /**
  * FrankyCore
@@ -26,16 +28,47 @@ final class FrankyCore
 
     public const CORE_ALLOWED_ENVIRONMENTS = [self::ENV_PROD, self::ENV_DEV, self::ENV_QA];
 
+    /**
+     * @var \AltoRouter
+     */
     private \AltoRouter $router;
-    private \Pop\Db\Adapter\AbstractAdapter $db;
+    /**
+     * @var AbstractAdapter
+     */
+    private AbstractAdapter $db;
+    /**
+     * @var CoreMailHandlerPhpMailer
+     */
     private CoreMailHandlerPhpMailer $mailer;
+    /**
+     * @var string
+     */
     private string $environment;
+    /**
+     * @var array<string>
+     */
     private array $config;
-    private \Pop\Session\Session $session;
+    /**
+     * @var Session
+     */
+    private Session $session;
+    /**
+     * @var Logger
+     */
     private \Monolog\Logger $log;
+    /**
+     * @var \Whoops\Run
+     */
     private $whoops;
 
 
+    /**
+     * FrankyCore constructor.
+     * @param array $dbOptions
+     * @param array<string> $config
+     * @param string $environment
+     * @throws \Pop\Db\Exception
+     */
     public function __construct(array $dbOptions, array $config, string $environment = self::ENV_DEV)
     {
         $this->router = new \AltoRouter();
@@ -45,7 +78,7 @@ final class FrankyCore
         $this->mailer = new CoreMailHandlerPhpMailer();
         $this->environment = $environment;
         $this->config = $config;
-        $this->session = \Pop\Session\Session::getInstance();
+        $this->session = Session::getInstance();
 
         $this->log = new Logger('name');
         $this->log->pushHandler(
@@ -74,25 +107,71 @@ final class FrankyCore
         $this->whoops = $whoops;
     }
 
-
-    public function __get(string $property = '')
+    /**
+     * @return \AltoRouter
+     */
+    public function router()
     {
-        if (property_exists($this, $property)) {
-            if ($property === 'config') {
-                throw new \jotaa\core\core_exceptions\CoreShouldUseOtherException('You should use getConfig method');
-            }
-            return $this->{$property};
-        }
-        throw new CoreUnexistentPropertyException("Undefined property {$property}");
+        return $this->router;
+    }
+
+    /**
+     * @return AbstractAdapter
+     */
+    public function db(): AbstractAdapter
+    {
+        return $this->db;
+    }
+
+    /**
+     * @return CoreMailHandlerPhpMailer
+     */
+    public function mailer(): CoreMailHandlerPhpMailer
+    {
+        return $this->mailer;
+    }
+
+    /**
+     * @return string
+     */
+    public function environment(): string
+    {
+        return $this->environment;
+    }
+
+    /**
+     * @return object|Session|null
+     */
+    public function session()
+    {
+        return $this->session;
+    }
+
+    /**
+     * @return Logger
+     */
+    public function log(): Logger
+    {
+        return $this->log;
+    }
+
+    /**
+     * @return \Whoops\Run
+     */
+    public function whoops(): \Whoops\Run
+    {
+        return $this->whoops;
     }
 
 
-    public function config(string $key = '')
-    {
-        if (empty($key)) {
-            return $this->config;
-        }
 
+    /**
+     * @param string $key
+     * @return string
+     * @throws \OutOfBoundsException
+     */
+    public function config(string $key = '') : string
+    {
         if (array_key_exists($key, $this->config)) {
             return $this->config[$key];
         }
@@ -101,26 +180,48 @@ final class FrankyCore
     }
 
 
-    public function rootPath()
+    /**
+     * @return array<string>
+     */
+    public function getConfig() : array
+    {
+        return $this->config;
+    }
+
+
+    /**
+     * @return string
+     */
+    public function rootPath() : string
     {
         return $this->config('rootPath');
     }
 
 
-    public function viewPath()
+    /**
+     * @return string
+     */
+    public function viewPath() : string
     {
         return $this->config('viewPath');
     }
 
 
-    public function assetPath()
+    /**
+     * @return string
+     */
+    public function assetPath() : string
     {
         return $this->config('assetPath');
     }
 
 
-    public function cssPath()
+    /**
+     * @return string
+     */
+    public function cssPath() : string
     {
         return $this->config('cssPath');
     }
 }
+

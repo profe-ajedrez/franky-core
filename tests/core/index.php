@@ -21,8 +21,8 @@ $franky = new FrankyCore(
     ]
 );
 
-$franky->router->setBasePath('/fcoregt/tests/core');
-$franky->router->map(
+$franky->router()->setBasePath('/fcoregt/tests/core');
+$franky->router()->map(
     'GET',
     '/',
     function() use ($franky) {
@@ -30,7 +30,7 @@ $franky->router->map(
     }
 );
 
-$match = $franky->router->match();
+$match = $franky->router()->match();
 
 // call closure or throw 404 status
 if( is_array($match) && is_callable( $match['target'] ) ) {
