@@ -2,6 +2,7 @@
 
 require_once '../../vendor/autoload.php';
 
+use jotaa\core\core_interfaces\CoreBehaviorInterface;
 use jotaa\core\FrankyCore;
 
 $franky = new FrankyCore(
@@ -25,17 +26,46 @@ $franky->router()->setBasePath('/fcoregt/tests/core');
 $franky->router()->map(
     'GET',
     '/',
-    function() use ($franky) {
-        var_dump($franky->config());
+    function () use ($franky) {
+        $franky->callBehavior('saluda');
     }
 );
+
+
+$franky->attachBehavior(
+    'saluda',
+    (new class($franky) implements CoreBehaviorInterface {
+        private WeakReference $owner;
+
+        public function __construct($franky)
+        {
+             $this->owner = WeakReference::create($franky);
+        }
+
+        public function run(array $parameters = []) : void
+        {
+            var_dump($this->owner->get());
+        }
+
+        public function getOwnerReference()
+        {
+            return $this->owner;
+        }
+
+        public function getBehaviorName() : string
+        {
+            return 'saludar';
+        }
+    })
+);
+
 
 $match = $franky->router()->match();
 
 // call closure or throw 404 status
-if( is_array($match) && is_callable( $match['target'] ) ) {
-    call_user_func_array( $match['target'], $match['params'] );
+if (is_array($match) && is_callable($match['target'])) {
+    call_user_func_array($match['target'], $match['params']);
 } else {
     // no route was matched
-    header( $_SERVER["SERVER_PROTOCOL"] . ' 404 Not Found');
+    header($_SERVER["SERVER_PROTOCOL"] . ' 404 Not Found');
 }

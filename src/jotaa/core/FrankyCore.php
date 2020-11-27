@@ -4,11 +4,15 @@ namespace jotaa\core;
 
 use jotaa\core\core_classes\CoreMailHandlerPhpMailer;
 use jotaa\core\core_exceptions\CoreFileDoesntExistsException;
+use jotaa\core\core_exceptions\CoreUndefinedBehaviorException;
 use jotaa\core\core_exceptions\CoreUnexistentPropertyException;
+use jotaa\core\core_interfaces\CoreBehaviorInterface;
+use jotaa\core\core_interfaces\CoreHasBehaviorInterface;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use Pop\Db\Adapter\AbstractAdapter;
 use Pop\Session\Session;
+use WeakReference;
 
 /**
  * FrankyCore
@@ -18,14 +22,12 @@ use Pop\Session\Session;
  * the app.
  *
  * @Author  Andrés Reyes a.k.a. Undercoder a.k.a. Jacobopous
- * @Version 0.1.0
  */
-final class FrankyCore
+final class FrankyCore implements CoreHasBehaviorInterface
 {
     public const ENV_PROD = 'PRODUCTION';
     public const ENV_DEV  = 'DEVELOPMENT';
     public const ENV_QA   = 'QASSESTMENT';
-
     public const CORE_ALLOWED_ENVIRONMENTS = [self::ENV_PROD, self::ENV_DEV, self::ENV_QA];
 
     /**
@@ -60,6 +62,11 @@ final class FrankyCore
      * @var \Whoops\Run
      */
     private $whoops;
+
+    /**
+     * @var CoreBehaviorInterface[] $behaviors
+     */
+    private array $behaviors = [];
 
 
     /**
@@ -223,5 +230,29 @@ final class FrankyCore
     {
         return $this->config('cssPath');
     }
-}
 
+    public function attachBehavior(string $behaviorName, CoreBehaviorInterface $behavior) : void
+    {
+        $this->behaviors[$behaviorName] = $behavior;
+    }
+
+    public function removeBehavior(string $behaviorName) : CoreBehaviorInterface
+    {
+        if (array_key_exists($behaviorName, $this->behaviors)) {
+            $behavior = $this->behaviors[$behaviorName];
+            unset($this->behaviors[$behaviorName]);
+            return $behavior;
+        }
+        throw new CoreUndefinedBehaviorException("Behavior {$behaviorName} is undefined in list of custom behaviors");
+    }
+
+    public function callBehavior(string $behaviorName, array $parameters = []) : void
+    {
+        if (array_key_exists($behaviorName, $this->behaviors)) {
+            $behavior = ($this->behaviors[$behaviorName]);
+            $behavior->run($parameters);
+            return;
+        }
+        throw new CoreUndefinedBehaviorException("Behavior {$behaviorName} is undefined in list of custom behaviors");
+    }
+}

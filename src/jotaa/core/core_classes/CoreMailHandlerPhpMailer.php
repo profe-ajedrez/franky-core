@@ -16,21 +16,18 @@ use PHPMailer\PHPMailer\PHPMailer;
 
 class CoreMailHandlerPhpMailer
 {
+    const TEST_MAIL = 'metaljacobo@gmail.com';
+
     public function registerMailHandler($logger)
     {
         $mailer = new PHPMailer(true);
-        //$mailer->isSMTP();
         $mailer->Host = 'localhost';
-        //$mailer->Port = 587;
         $mailer->SMTPAuth = false;
-        //$mailer->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        //$mailer->Username = 'metaljacobo@gmail.com';
-        //$mailer->Password = base64_decode('ak1hQm9wdXMxOTgw');
         $mailer->Subject = 'PHPMailer GMail SMTP test';
-        $mailer->addReplyTo('metaljacobo@gmail.com');
+        $mailer->addReplyTo(self::TEST_MAIL);
 
-        $mailer->setFrom('metaljacobo@gmail.com', 'Logging Server');
-        $mailer->addAddress('metaljacobo@gmail.com', 'Franky Api');
+        $mailer->setFrom(self::TEST_MAIL, 'Logging Server');
+        $mailer->addAddress(self::TEST_MAIL, 'Franky Api');
 
         $logger->pushProcessor(new IntrospectionProcessor);
         $logger->pushProcessor(new MemoryUsageProcessor);
