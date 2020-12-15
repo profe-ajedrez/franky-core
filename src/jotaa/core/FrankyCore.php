@@ -3,16 +3,12 @@
 namespace jotaa\core;
 
 use jotaa\core\core_classes\CoreMailHandlerPhpMailer;
-use jotaa\core\core_exceptions\CoreFileDoesntExistsException;
 use jotaa\core\core_exceptions\CoreUndefinedBehaviorException;
-use jotaa\core\core_exceptions\CoreUnexistentPropertyException;
 use jotaa\core\core_interfaces\CoreBehaviorInterface;
 use jotaa\core\core_interfaces\CoreHasBehaviorInterface;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use Pop\Db\Adapter\AbstractAdapter;
-use Pop\Session\Session;
-use WeakReference;
 
 /**
  * FrankyCore
@@ -51,10 +47,6 @@ final class FrankyCore implements CoreHasBehaviorInterface
      */
     private array $config;
     /**
-     * @var Session
-     */
-    private Session $session;
-    /**
      * @var Logger
      */
     private \Monolog\Logger $log;
@@ -85,7 +77,6 @@ final class FrankyCore implements CoreHasBehaviorInterface
         $this->mailer = new CoreMailHandlerPhpMailer();
         $this->environment = $environment;
         $this->config = $config;
-        $this->session = Session::getInstance();
 
         $this->log = new Logger('name');
         $this->log->pushHandler(
@@ -144,14 +135,6 @@ final class FrankyCore implements CoreHasBehaviorInterface
     public function environment(): string
     {
         return $this->environment;
-    }
-
-    /**
-     * @return object|Session|null
-     */
-    public function session()
-    {
-        return $this->session;
     }
 
     /**
