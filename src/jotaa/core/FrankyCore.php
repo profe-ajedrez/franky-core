@@ -55,6 +55,7 @@ final class FrankyCore implements CoreHasBehaviorInterface
      */
     private $whoops;
 
+
     /**
      * @var CoreBehaviorInterface[] $behaviors
      */
@@ -104,6 +105,7 @@ final class FrankyCore implements CoreHasBehaviorInterface
         $whoops->register();
         $this->whoops = $whoops;
     }
+
 
     /**
      * @return \AltoRouter
