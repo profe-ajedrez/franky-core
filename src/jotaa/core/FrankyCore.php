@@ -2,13 +2,13 @@
 
 namespace jotaa\core;
 
-use jotaa\core\core_classes\CoreMailHandlerPhpMailer;
-use jotaa\core\core_exceptions\CoreUndefinedBehaviorException;
-use jotaa\core\core_interfaces\CoreBehaviorInterface;
 use jotaa\core\core_interfaces\CoreHasBehaviorInterface;
+use jotaa\core\core_interfaces\CoreBehaviorInterface;
+use jotaa\core\core_exceptions\CoreUndefinedBehaviorException;
+use jotaa\core\core_classes\CoreMailHandlerPhpMailer;
+use Pop\Db\Adapter\AbstractAdapter;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
-use Pop\Db\Adapter\AbstractAdapter;
 
 /**
  * FrankyCore
@@ -72,7 +72,7 @@ final class FrankyCore implements CoreHasBehaviorInterface
     public function __construct(array $dbOptions, array $config, string $environment = self::ENV_DEV)
     {
         $this->router = new \AltoRouter();
-        $this->db = \Pop\Db\Db::connect('mysql', $dbOptions);
+        $this->db = \Pop\Db\Db::connect('pdo', $dbOptions);
         \Pop\Db\Record::setDb($this->db);
 
         $this->mailer = new CoreMailHandlerPhpMailer();
