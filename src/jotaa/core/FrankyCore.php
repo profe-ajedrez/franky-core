@@ -172,6 +172,12 @@ final class FrankyCore implements CoreHasBehaviorInterface
     }
 
 
+    public function setConfig(string $key, string $value) : void
+    {
+        $this->config[ $key ] = $value;
+    }
+
+
     /**
      * @return array<string>
      */
